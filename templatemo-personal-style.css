@@ -685,7 +685,7 @@ https://templatemo.com/tm-593-personal-shape
         }
 
         .about-image::after {
-
+            opacity: 0.7;
         }
 
         .about-text h3 {
