@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Management - Admin{% endblock %}
+
+{% block content %}
+    <!-- Admin Staff Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">Staff Management</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem;" class="fade-in">
+                Manage staff members and administrators
+            </p>
+            
+            <!-- Add Staff Member Button -->
+            <div style="text-align: center; margin-bottom: 2rem; position: relative; z-index: 10;">
+                <button id="addStaffBtn" type="button" style="display: inline-block; padding: 1rem 2rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; border-radius: 50px; font-weight: 600; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: all 0.3s ease; pointer-events: auto; position: relative; z-index: 100;">
+                    + Add Staff Member
+                </button>
+            </div>
+            
+            <!-- Staff Members List -->
+            <div class="portfolio-grid" style="grid-template-columns: 1fr; gap: 2rem;">
+                {% if staff_members %}
+                    {% for staff in staff_members %}
+                        <div class="portfolio-item">
+                            <div class="portfolio-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                                    <div>
+                                        <h4 style="margin-bottom: 0.5rem;">{{ staff.name }}</h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                            {{ staff.email }}
+                                        </p>
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0;">
+                                            Phone: {{ staff.phone|default('N/A') }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span class="tech-tag" style="background: {% if staff.role == 'admin' %}#ef4444{% else %}#3b82f6{% endif %}; color: white; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                                            {{ staff.role|upper }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                                    <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px;">
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--primary-color);">{{ staff.assigned_complaints|default(0) }}</div>
+                                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Assigned Complaints</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px;">
+                                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Status</div>
+                                        <div style="font-size: 0.85rem; color: {% if staff.is_active %}#10b981{% else %}#ef4444{% endif %}; font-weight: 600; margin-top: 0.25rem;">
+                                            {% if staff.is_active %}Active{% else %}Inactive{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if staff.created_at %}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(99, 102, 241, 0.1);">
+                                    <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                                        Member since: {{ staff.created_at|datetime if staff.created_at else 'N/A' }}
+                                    </small>
+                                    {% if staff.last_login %}
+                                    <br>
+                                    <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                                        Last login: {{ staff.last_login|time_ago if staff.last_login else 'Never' }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="portfolio-item" style="text-align: center; padding: 3rem;">
+                        <h4>No staff members found</h4>
+                        <p style="color: var(--text-secondary); margin-top: 1rem;">Staff members will appear here when they are added.</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Back Button -->
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="{{ url_for('admin_dashboard') }}" class="cta-button" style="display: inline-block; text-decoration: none;">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Add Staff Member Modal -->
+    <div id="addStaffModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 2rem; border-radius: 10px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Add Staff Member</h3>
+            <form id="addStaffForm">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Staff ID:</label>
+                    <input type="text" name="staff_id" required 
+                           placeholder="Enter unique staff ID"
+                           style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Name:</label>
+                    <input type="text" name="name" required 
+                           placeholder="Enter full name"
+                           style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Email:</label>
+                    <input type="email" name="email" required 
+                           placeholder="Enter email address"
+                           style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Phone:</label>
+                    <input type="text" name="phone" 
+                           placeholder="Enter phone number (optional)"
+                           style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Password:</label>
+                    <input type="password" name="password" required 
+                           placeholder="Enter password"
+                           style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; font-size: 1rem;">
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" id="cancelStaffBtn" 
+                            style="padding: 0.75rem 1.5rem; background: var(--bg-secondary); color: var(--text-primary); border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            style="padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        Create Staff Member
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Staff Member Modal
+        const addStaffBtn = document.getElementById('addStaffBtn');
+        const addStaffModal = document.getElementById('addStaffModal');
+        const cancelStaffBtn = document.getElementById('cancelStaffBtn');
+        const addStaffForm = document.getElementById('addStaffForm');
+        
+        console.log('Button element:', addStaffBtn);
+        console.log('Modal element:', addStaffModal);
+        
+        // Add hover effect to button and click handler
+        if (addStaffBtn) {
+            // Ensure button is clickable
+            addStaffBtn.style.pointerEvents = 'auto';
+            addStaffBtn.style.cursor = 'pointer';
+            
+            addStaffBtn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.4)';
+            });
+            
+            addStaffBtn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 4px 15px rgba(99, 102, 241, 0.3)';
+            });
+            
+            // Click handler
+            addStaffBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Button clicked!');
+                if (addStaffModal) {
+                    addStaffModal.style.display = 'flex';
+                    console.log('Modal should be visible now');
+                } else {
+                    console.error('Modal not found!');
+                }
+            });
+        } else {
+            console.error('Add Staff Button not found!');
+        }
+        
+        // Cancel button handler
+        if (cancelStaffBtn && addStaffModal && addStaffForm) {
+            cancelStaffBtn.addEventListener('click', function() {
+                addStaffModal.style.display = 'none';
+                addStaffForm.reset();
+            });
+        }
+        
+        // Close modal when clicking outside
+        if (addStaffModal && addStaffForm) {
+            addStaffModal.addEventListener('click', function(e) {
+                if (e.target === addStaffModal) {
+                    addStaffModal.style.display = 'none';
+                    addStaffForm.reset();
+                }
+            });
+        }
+        
+        // Handle form submission
+        if (addStaffForm) {
+            addStaffForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(addStaffForm);
+                const submitBtn = addStaffForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn ? submitBtn.textContent : 'Create Staff Member';
+                
+                if (submitBtn) {
+                    submitBtn.textContent = 'Creating...';
+                    submitBtn.disabled = true;
+                }
+                
+                fetch('/admin/staff/add', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Staff member created successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                        if (submitBtn) {
+                            submitBtn.textContent = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    alert('Error creating staff member: ' + error);
+                    if (submitBtn) {
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
+

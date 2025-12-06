@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Municipal Services{% endblock %}
+
+{% block content %}
+    <!-- Dashboard Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">My Complaints</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem;" class="fade-in">
+                Welcome, {{ session.get('user_name', 'User') }}! Here are all your submitted complaints.
+            </p>
+            
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <a href="{{ url_for('submit_complaint') }}" class="cta-button" style="display: inline-block; padding: 1rem 2rem; text-decoration: none;">
+                    Submit New Complaint
+                </a>
+            </div>
+            
+            <!-- Complaints List -->
+            <div class="portfolio-grid" style="grid-template-columns: 1fr; gap: 2rem;">
+                {% if complaints %}
+                    {% for complaint in complaints %}
+                        <div class="portfolio-item">
+                            <div class="portfolio-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                    <div>
+                                        <h4 style="margin-bottom: 0.5rem;">{{ complaint.category }}</h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                            ID: {{ complaint._id[:8] }} | {{ complaint.created_at.strftime('%B %d, %Y at %I:%M %p') if complaint.created_at else 'N/A' }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span class="tech-tag" style="background: {% if complaint.status == 'Resolved' %}#10b981{% elif complaint.status == 'In Progress' %}#3b82f6{% else %}#f59e0b{% endif %}; color: white;">
+                                            {{ complaint.status }}
+                                        </span>
+                                        {% if complaint.is_urgent %}
+                                            <span class="tech-tag" style="background: #ef4444; color: white; margin-left: 0.5rem;">
+                                                Urgent
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <p style="margin-bottom: 0.5rem;"><strong>Location:</strong> {{ complaint.location }}</p>
+                                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">{{ complaint.description[:150] }}{% if complaint.description|length > 150 %}...{% endif %}</p>
+                                
+                                {% if complaint.photo %}
+                                    <div style="margin-bottom: 1rem;">
+                                        <img src="{{ url_for('static', filename=complaint.photo) }}" alt="Complaint photo" 
+                                             style="max-width: 200px; border-radius: 10px; box-shadow: var(--shadow-md);">
+                                    </div>
+                                {% endif %}
+                                
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                    <span class="tech-tag">{{ complaint.department }}</span>
+                                    <a href="{{ url_for('track_complaint', complaint_id=complaint._id) }}" 
+                                       class="tech-tag" 
+                                       style="background: var(--primary-color); color: white; text-decoration: none; cursor: pointer;">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="portfolio-item" style="text-align: center; padding: 3rem;">
+                        <h4>No complaints yet</h4>
+                        <p style="color: var(--text-secondary); margin: 1rem 0 2rem;">Start by submitting your first complaint!</p>
+                        <a href="{{ url_for('submit_complaint') }}" class="cta-button" style="display: inline-block; text-decoration: none;">
+                            Submit Complaint
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

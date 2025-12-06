@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}My Tasks - Staff{% endblock %}
+
+{% block content %}
+    <!-- Staff Complaints Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">My Assigned Complaints</h2>
+            
+            <!-- Filters -->
+            <div class="portfolio-item" style="max-width: 100%; margin-bottom: 2rem; padding: 2rem;">
+                <form method="GET" action="{{ url_for('staff_complaints') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group" style="text-align: left;">
+                        <label for="status" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem; display: block;">Status</label>
+                        <select id="status" name="status" style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            <option value="">All Statuses</option>
+                            {% for status in statuses %}
+                                <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ status }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="text-align: left;">
+                        <label for="priority" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem; display: block;">Priority</label>
+                        <select id="priority" name="priority" style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            <option value="">All Priorities</option>
+                            {% for priority in priorities %}
+                                <option value="{{ priority }}" {% if priority_filter == priority %}selected{% endif %}>{{ priority }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" style="padding: 1rem 2rem; background: var(--gradient-primary); color: white; border: none; border-radius: 50px; font-weight: 600; cursor: pointer; width: 100%; margin: 0;">Filter</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Complaints List -->
+            <div class="portfolio-grid" style="grid-template-columns: 1fr; gap: 2rem;">
+                {% if complaints %}
+                    {% for complaint in complaints %}
+                        <div class="portfolio-item">
+                            <div class="portfolio-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                                    <div>
+                                        <h4 style="margin-bottom: 0.5rem;">{{ complaint.category }}</h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                            ID: {% if complaint.complaint_id %}{{ complaint.complaint_id }}{% else %}{{ complaint._id[:8] }}{% endif %} | {{ complaint.created_at|datetime if complaint.created_at else 'N/A' }}
+                                        </p>
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0;">
+                                            By: {{ complaint.user_name }} ({{ complaint.user_email }})
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span class="tech-tag" style="background: {% if complaint.status == 'Resolved' %}#10b981{% elif complaint.status == 'In Progress' %}#3b82f6{% else %}#f59e0b{% endif %}; color: white;">
+                                            {{ complaint.status }}
+                                        </span>
+                                        {% if complaint.is_urgent %}
+                                            <span class="tech-tag" style="background: #ef4444; color: white; margin-left: 0.5rem;">
+                                                Urgent
+                                            </span>
+                                        {% endif %}
+                                        {% if complaint.sla_breached %}
+                                            <span class="tech-tag" style="background: #ef4444; color: white; margin-left: 0.5rem;">
+                                                SLA Breached
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <p style="margin-bottom: 0.5rem;"><strong>Location:</strong> {{ complaint.location }}</p>
+                                <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ complaint.description }}</p>
+                                
+                                {% if complaint.photo or complaint.image_path %}
+                                    <div style="margin-bottom: 1rem;">
+                                        <img src="{{ url_for('static', filename=complaint.photo or complaint.image_path) }}" alt="Complaint photo" 
+                                             style="max-width: 300px; border-radius: 10px; box-shadow: var(--shadow-md);">
+                                    </div>
+                                {% endif %}
+                                
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                                    <span class="tech-tag">{{ complaint.department }}</span>
+                                    <span class="tech-tag" style="background: {{ complaint.priority|priority_color }}; color: white;">
+                                        {{ complaint.priority }}
+                                    </span>
+                                    {% if complaint.sla_deadline %}
+                                        <span class="tech-tag" style="background: {% if complaint.sla_breached %}#ef4444{% else %}#64748b{% endif %}; color: white;">
+                                            SLA: {{ complaint.sla_deadline|datetime('%b %d, %Y') }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Staff Actions -->
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                                    <select class="status-select" data-complaint-id="{{ complaint._id }}" 
+                                            style="padding: 0.5rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; background: white;">
+                                        {% for status in statuses %}
+                                            <option value="{{ status }}" {% if complaint.status == status %}selected{% endif %}>{{ status }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    
+                                    <a href="{{ url_for('track_complaint', complaint_id=complaint._id) }}" 
+                                       class="tech-tag" 
+                                       style="background: var(--primary-color); color: white; text-decoration: none;">
+                                        View Details
+                                    </a>
+                                </div>
+                                
+                                <!-- Worker Actions Form -->
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                                    <form class="worker-update-form" data-complaint-id="{{ complaint._id }}" enctype="multipart/form-data">
+                                        <input type="hidden" name="complaint_id" value="{{ complaint._id }}">
+                                        
+                                        <div style="margin-bottom: 0.75rem;">
+                                            <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Update Status:</label>
+                                            <select name="status" 
+                                                    style="width: 100%; padding: 0.5rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; background: white;">
+                                                {% for status in statuses %}
+                                                    <option value="{{ status }}" {% if complaint.status == status %}selected{% endif %}>{{ status }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div style="margin-bottom: 0.75rem;">
+                                            <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Upload Proof Image/Video (Optional):</label>
+                                            <input type="file" name="proof_image" accept="image/*,video/*" 
+                                                   style="width: 100%; padding: 0.5rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; background: white; font-size: 0.9rem;">
+                                            <small style="color: var(--text-secondary); font-size: 0.8rem;">Photo or video showing work completed</small>
+                                        </div>
+                                        
+                                        <div style="margin-bottom: 0.75rem;">
+                                            <textarea name="comment" placeholder="Add notes, comments, or update..." 
+                                                      rows="3"
+                                                      style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; font-family: inherit; font-size: 0.9rem;"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="tech-tag" 
+                                                style="background: var(--primary-color); color: white; border: none; cursor: pointer; padding: 0.75rem 1.5rem; width: 100%;">
+                                            Update Status
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                {% if complaint.proof_images and complaint.proof_images|length > 0 %}
+                                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                                        <h5 style="margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.9rem;">Proof Images Uploaded:</h5>
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            {% for proof in complaint.proof_images %}
+                                                {% if proof.path %}
+                                                    <img src="{{ url_for('static', filename=proof.path) }}" 
+                                                         alt="Proof" 
+                                                         style="max-width: 100px; border-radius: 5px; box-shadow: var(--shadow-sm);">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="portfolio-item" style="text-align: center; padding: 3rem;">
+                        <h4>No complaints found</h4>
+                        <p style="color: var(--text-secondary);">Try adjusting your filters</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <div style="text-align: center; margin-top: 3rem;">
+                <div style="display: flex; justify-content: center; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    {% if page > 1 %}
+                        <a href="{{ url_for('staff_complaints', page=page-1, status=status_filter, priority=priority_filter) }}" 
+                           class="tech-tag" 
+                           style="background: var(--primary-color); color: white; text-decoration: none; padding: 0.5rem 1rem;">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span style="color: var(--text-secondary); padding: 0 1rem;">
+                        Page {{ page }} of {{ total_pages }} ({{ total }} complaints)
+                    </span>
+                    
+                    {% if page < total_pages %}
+                        <a href="{{ url_for('staff_complaints', page=page+1, status=status_filter, priority=priority_filter) }}" 
+                           class="tech-tag" 
+                           style="background: var(--primary-color); color: white; text-decoration: none; padding: 0.5rem 1rem;">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Worker update form submission
+    document.querySelectorAll('.worker-update-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const complaintId = this.dataset.complaintId;
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            // Validate status
+            const status = formData.get('status');
+            if (!status) {
+                alert('Please select a status');
+                return;
+            }
+            
+            submitBtn.textContent = 'Updating...';
+            submitBtn.disabled = true;
+            
+            fetch('/worker/update_status', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Status updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                alert('Error updating status: ' + error);
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    });
+    
+    // Image preview for proof upload
+    document.querySelectorAll('input[name="proof_image"]').forEach(input => {
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Remove existing preview
+                    const existingPreview = this.parentElement.querySelector('.proof-preview');
+                    if (existingPreview) {
+                        existingPreview.remove();
+                    }
+                    
+                    // Create preview
+                    const preview = document.createElement('img');
+                    preview.src = e.target.result;
+                    preview.className = 'proof-preview';
+                    preview.style.cssText = 'max-width: 150px; border-radius: 8px; margin-top: 0.5rem; box-shadow: var(--shadow-md);';
+                    this.parentElement.appendChild(preview);
+                }.bind(this);
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+</script>
+{% endblock %}
+

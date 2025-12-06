@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}View Complaints - Admin{% endblock %}
+
+{% block content %}
+    <!-- Admin View Complaints Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">All Complaints</h2>
+            
+            <!-- Filters -->
+            <div class="portfolio-item" style="max-width: 100%; margin-bottom: 2rem; padding: 2rem;">
+                <form method="GET" action="{{ url_for('admin_view_complaints') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group" style="text-align: left;">
+                        <label for="category" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem; display: block;">Category</label>
+                        <select id="category" name="category" style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="text-align: left;">
+                        <label for="status" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem; display: block;">Status</label>
+                        <select id="status" name="status" style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            <option value="">All Statuses</option>
+                            <option value="Pending" {% if request.args.get('status') == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="In Progress" {% if request.args.get('status') == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option value="Resolved" {% if request.args.get('status') == 'Resolved' %}selected{% endif %}>Resolved</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="text-align: left;">
+                        <label for="search" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem; display: block;">Search</label>
+                        <input type="text" id="search" name="search" placeholder="Location or description" 
+                               value="{{ request.args.get('search', '') }}"
+                               style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" style="padding: 1rem 2rem; background: var(--gradient-primary); color: white; border: none; border-radius: 50px; font-weight: 600; cursor: pointer; width: 100%; margin: 0;">Filter</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Complaints List -->
+            <div class="portfolio-grid" style="grid-template-columns: 1fr; gap: 2rem;">
+                {% if complaints %}
+                    {% for complaint in complaints %}
+                        <div class="portfolio-item">
+                            <div class="portfolio-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                                    <div>
+                                        <h4 style="margin-bottom: 0.5rem;">{{ complaint.category }}</h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                            ID: {{ complaint._id[:8] }} | Submitted: {{ complaint.created_at.strftime('%B %d, %Y at %I:%M %p') if complaint.created_at else 'N/A' }}
+                                        </p>
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0;">
+                                            By: {{ complaint.user_name }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span class="tech-tag" style="background: {% if complaint.status == 'Resolved' %}#10b981{% elif complaint.status == 'In Progress' %}#3b82f6{% else %}#f59e0b{% endif %}; color: white;">
+                                            {{ complaint.status }}
+                                        </span>
+                                        {% if complaint.is_urgent %}
+                                            <span class="tech-tag" style="background: #ef4444; color: white; margin-left: 0.5rem;">
+                                                Urgent
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <p style="margin-bottom: 0.5rem;"><strong>Location:</strong> {{ complaint.location }}</p>
+                                <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ complaint.description }}</p>
+                                
+                                {% if complaint.photo or complaint.image_path %}
+                                    <div style="margin-bottom: 1rem;">
+                                        {% set photo_path = complaint.photo or complaint.image_path %}
+                                        <img src="{{ url_for('static', filename=photo_path) }}" alt="Complaint photo" 
+                                             style="max-width: 300px; border-radius: 10px; box-shadow: var(--shadow-md);"
+                                             onerror="this.style.display='none';">
+                                    </div>
+                                {% endif %}
+                                
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                                    <span class="tech-tag">{{ complaint.department }}</span>
+                                </div>
+                                
+                                <!-- Admin Actions -->
+                                <div style="padding-top: 1rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center;">
+                                        <label style="font-weight: 500; color: var(--text-primary);">Status:</label>
+                                        <select class="status-select" data-complaint-id="{{ complaint._id }}" 
+                                                id="status-{{ complaint._id }}"
+                                                style="padding: 0.5rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; background: white; min-width: 150px;">
+                                            <option value="Pending" {% if complaint.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                            <option value="Acknowledged" {% if complaint.status == 'Acknowledged' %}selected{% endif %}>Acknowledged</option>
+                                            <option value="In Progress" {% if complaint.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                            <option value="Under Review" {% if complaint.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                                            <option value="Resolved" {% if complaint.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                            <option value="Closed" {% if complaint.status == 'Closed' %}selected{% endif %}>Closed</option>
+                                            <option value="Rejected" {% if complaint.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                        </select>
+                                        
+                                        <button class="save-status-btn tech-tag" data-complaint-id="{{ complaint._id }}" 
+                                                style="background: #10b981; color: white; border: none; cursor: pointer; padding: 0.5rem 1rem;">
+                                            Save Status
+                                        </button>
+                                        
+                                        <button class="urgent-toggle tech-tag" data-complaint-id="{{ complaint._id }}" 
+                                                data-urgent="{{ complaint.is_urgent|lower }}"
+                                                style="background: {% if complaint.is_urgent %}#ef4444{% else %}var(--bg-secondary){% endif %}; color: {% if complaint.is_urgent %}white{% else %}var(--text-secondary){% endif %}; border: none; cursor: pointer; padding: 0.5rem 1rem;">
+                                            {% if complaint.is_urgent %}Remove Urgent{% else %}Mark Urgent{% endif %}
+                                        </button>
+                                        
+                                        <button class="assign-complaint-btn tech-tag" data-complaint-id="{{ complaint._id }}" 
+                                                style="background: #8b5cf6; color: white; border: none; cursor: pointer; padding: 0.5rem 1rem;">
+                                            {% if complaint.assigned_to %}Reassign{% else %}Assign{% endif %}
+                                        </button>
+                                        
+                                        <a href="{{ url_for('admin_complaint_details', complaint_id=complaint._id) }}" 
+                                           class="tech-tag" 
+                                           style="background: var(--primary-color); color: white; text-decoration: none; padding: 0.5rem 1rem;">
+                                            View Details
+                                        </a>
+                                    </div>
+                                    {% if complaint.assigned_to_name %}
+                                    <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(99, 102, 241, 0.1);">
+                                        <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                                            Assigned to: <strong>{{ complaint.assigned_to_name }}</strong>
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Comment Section -->
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                                    <textarea class="comment-input" data-complaint-id="{{ complaint._id }}" 
+                                              placeholder="Add a comment..." 
+                                              rows="2"
+                                              style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; margin-bottom: 0.5rem; font-family: inherit;"></textarea>
+                                    <button class="add-comment-btn tech-tag" data-complaint-id="{{ complaint._id }}"
+                                            style="background: var(--primary-color); color: white; border: none; cursor: pointer;">
+                                        Add Comment
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="portfolio-item" style="text-align: center; padding: 3rem;">
+                        <h4>No complaints found</h4>
+                        <p style="color: var(--text-secondary);">Try adjusting your filters</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    
+    <!-- Assign Complaint Modal -->
+    <div id="assignModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 2rem; border-radius: 10px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Assign Complaint to Staff</h3>
+            <form id="assignForm">
+                <input type="hidden" id="assignComplaintId" name="complaint_id">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Select Staff Member:</label>
+                    <select id="staffSelect" name="staff_id" required 
+                            style="width: 100%; padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; font-size: 1rem;">
+                        <option value="">Loading staff members...</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" id="cancelAssignBtn" 
+                            style="padding: 0.75rem 1.5rem; background: var(--bg-secondary); color: var(--text-primary); border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            style="padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        Assign
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Save Status Button - Update status when button is clicked
+    document.querySelectorAll('.save-status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const complaintId = this.dataset.complaintId;
+            const statusSelect = document.getElementById(`status-${complaintId}`);
+            const status = statusSelect.value;
+            
+            // Show loading state
+            const originalText = this.textContent;
+            this.textContent = 'Saving...';
+            this.disabled = true;
+            this.style.background = '#94a3b8';
+            
+            console.log(`Updating complaint ${complaintId} to status: ${status}`);
+            
+            fetch(`/admin/complaint/${complaintId}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => {
+                console.log(`Response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    // Show success feedback
+                    this.textContent = 'Saved! ✓';
+                    this.style.background = '#10b981';
+                    
+                    // Update status badge visually
+                    const statusBadge = document.querySelector(`.portfolio-item [data-complaint-id="${complaintId}"]`)
+                        ?.closest('.portfolio-item')
+                        ?.querySelector('.tech-tag');
+                    if (statusBadge) {
+                        statusBadge.textContent = status;
+                        // Update color based on status
+                        if (status === 'Resolved' || status === 'Closed') {
+                            statusBadge.style.background = '#10b981';
+                        } else if (status === 'In Progress') {
+                            statusBadge.style.background = '#3b82f6';
+                        } else {
+                            statusBadge.style.background = '#f59e0b';
+                        }
+                    }
+                    
+                    // Reset button after 2 seconds and reload
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    alert('Error updating status: ' + (data.message || 'Unknown error'));
+                    this.textContent = originalText;
+                    this.disabled = false;
+                    this.style.background = '#10b981';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating status: ' + error);
+                this.textContent = originalText;
+                this.disabled = false;
+                this.style.background = '#10b981';
+            });
+        });
+    });
+    
+    // Remove old change event listener - we don't want auto-update on dropdown change anymore
+    
+    // Toggle urgent status
+    document.querySelectorAll('.urgent-toggle').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const complaintId = this.dataset.complaintId;
+            const isUrgent = this.dataset.urgent === 'true';
+            
+            fetch(`/admin/complaint/${complaintId}/urgent`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ is_urgent: !isUrgent })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating urgent status: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error updating urgent status: ' + error);
+            });
+        });
+    });
+    
+    // Add comment
+    document.querySelectorAll('.add-comment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const complaintId = this.dataset.complaintId;
+            const commentInput = document.querySelector(`.comment-input[data-complaint-id="${complaintId}"]`);
+            const comment = commentInput.value.trim();
+            
+            if (!comment) {
+                alert('Please enter a comment');
+                return;
+            }
+            
+            fetch(`/admin/complaint/${complaintId}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: document.querySelector(`.status-select[data-complaint-id="${complaintId}"]`).value, comment: comment })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    commentInput.value = '';
+                    location.reload();
+                } else {
+                    alert('Error adding comment: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error adding comment: ' + error);
+            });
+            });
+    });
+    
+    // Assign Complaint Button
+    document.querySelectorAll('.assign-complaint-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const complaintId = this.dataset.complaintId;
+            showAssignModal(complaintId);
+        });
+    });
+    
+    // Show Assign Modal
+    function showAssignModal(complaintId) {
+        // Fetch staff members
+        fetch('/admin/staff/list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = document.getElementById('assignModal');
+                    const staffSelect = document.getElementById('staffSelect');
+                    const complaintIdInput = document.getElementById('assignComplaintId');
+                    
+                    // Clear previous options
+                    staffSelect.innerHTML = '<option value="">Select Staff Member</option>';
+                    
+                    // Add staff members
+                    data.staff.forEach(staff => {
+                        const option = document.createElement('option');
+                        option.value = staff._id;
+                        option.textContent = `${staff.name} (${staff.email}) - ${staff.assigned_complaints || 0} assigned`;
+                        staffSelect.appendChild(option);
+                    });
+                    
+                    complaintIdInput.value = complaintId;
+                    modal.style.display = 'flex';
+                } else {
+                    alert('Error loading staff members: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error loading staff members: ' + error);
+            });
+    }
+    
+    // Close Assign Modal
+    document.getElementById('cancelAssignBtn').addEventListener('click', function() {
+        document.getElementById('assignModal').style.display = 'none';
+        document.getElementById('assignForm').reset();
+    });
+    
+    // Close modal when clicking outside
+    document.getElementById('assignModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+            document.getElementById('assignForm').reset();
+        }
+    });
+    
+    // Handle assign form submission
+    document.getElementById('assignForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const complaintId = document.getElementById('assignComplaintId').value;
+        const staffId = document.getElementById('staffSelect').value;
+        
+        if (!staffId) {
+            alert('Please select a staff member');
+            return;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        submitBtn.textContent = 'Assigning...';
+        submitBtn.disabled = true;
+        
+        fetch(`/admin/complaint/${complaintId}/assign`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ staff_id: staffId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Complaint assigned successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert('Error assigning complaint: ' + error);
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+</script>
+{% endblock %}
+

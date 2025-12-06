@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Dashboard - Municipal Services{% endblock %}
+
+{% block content %}
+    <!-- Staff Dashboard Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">My Dashboard</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem;" class="fade-in">
+                Welcome, {{ session.get('user_name', 'Staff') }}! Here are your assigned complaints.
+            </p>
+            
+            <!-- Statistics Cards -->
+            <div class="portfolio-grid" style="margin-bottom: 4rem;">
+                <div class="portfolio-item" style="text-align: center;">
+                    <div class="portfolio-content">
+                        <h3 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 0.5rem;">{{ stats.assigned }}</h3>
+                        <h4>Assigned Complaints</h4>
+                    </div>
+                </div>
+                <div class="portfolio-item" style="text-align: center;">
+                    <div class="portfolio-content">
+                        <h3 style="font-size: 3rem; color: #f59e0b; margin-bottom: 0.5rem;">{{ stats.pending }}</h3>
+                        <h4>Pending</h4>
+                    </div>
+                </div>
+                <div class="portfolio-item" style="text-align: center;">
+                    <div class="portfolio-content">
+                        <h3 style="font-size: 3rem; color: #3b82f6; margin-bottom: 0.5rem;">{{ stats.in_progress }}</h3>
+                        <h4>In Progress</h4>
+                    </div>
+                </div>
+                <div class="portfolio-item" style="text-align: center;">
+                    <div class="portfolio-content">
+                        <h3 style="font-size: 3rem; color: #10b981; margin-bottom: 0.5rem;">{{ stats.resolved }}</h3>
+                        <h4>Resolved</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <a href="{{ url_for('staff_complaints') }}" class="cta-button" style="display: inline-block; margin: 0 1rem; text-decoration: none;">
+                    View All Assigned Complaints
+                </a>
+            </div>
+            
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Worker update form submission
+    document.querySelectorAll('.worker-update-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const complaintId = this.dataset.complaintId;
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.textContent = 'Updating...';
+            submitBtn.disabled = true;
+            
+            fetch('/worker/update_status', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Status updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                alert('Error updating status: ' + error);
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    });
+</script>
+{% endblock %}
+

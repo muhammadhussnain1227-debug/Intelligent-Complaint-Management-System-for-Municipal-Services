@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Track Complaint - Municipal Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Track Complaint Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">Complaint Details</h2>
+            
+            <!-- Debug Info - Always show to diagnose issues -->
+            <div style="padding: 1rem; background: #f0f0f0; border-radius: 5px; margin-bottom: 1rem; font-family: monospace; font-size: 0.85rem; border: 2px solid #f59e0b;">
+                <strong>Complaint Info:</strong><br>
+                Complaint exists: {{ 'Yes' if complaint else 'No' }}<br>
+                {% if complaint %}
+                Complaint is truthy: Yes<br>
+                Category: {{ complaint.category|default('N/A') }}<br>
+                Status: {{ complaint.status|default('N/A') }}<br>
+                location: {{ complaint.location|default('N/A') }}<br>
+                description: {{ complaint.description|default('N/A') }}<br>
+                priority: {{ complaint.priority|default('N/A') }}<br>
+                department: {{ complaint.department|default('N/A') }}<br>
+                department_code: {{ complaint.department_code|default('N/A') }}<br>
+                created_at: {{ complaint.created_at|default('N/A') }}<br>
+                ID: {{ complaint._id|default('N/A') }}<br>
+                {% else %}
+                Complaint is None, False, or Empty<br>
+                {% endif %}
+            </div>
+            
+            {% if complaint %}
+            <div class="portfolio-item" style="max-width: 1200px; margin: 0 auto;">
+                <div class="portfolio-content">
+                    <!-- Complaint Header Card -->
+                    <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); padding: 2rem; border-radius: 20px; margin-bottom: 2rem; border: 1px solid rgba(99, 102, 241, 0.2);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1.5rem;">
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 700;">
+                                    {{ complaint.category|default('Unknown Category') }}
+                                </h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                    <div>
+                                        <strong style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Complaint ID</strong>
+                                        <p style="margin: 0.25rem 0 0; color: var(--text-primary); font-size: 1.1rem; font-weight: 600;">
+                                            {% if complaint.complaint_id %}{{ complaint.complaint_id }}{% elif complaint._id %}{{ complaint._id[:8] }}{% else %}N/A{% endif %}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <strong style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Department</strong>
+                                        <p style="margin: 0.25rem 0 0; color: var(--text-primary); font-size: 1.1rem;">
+                                            {{ complaint.department|default('General Department') }}
+                                            {% if complaint.department_code %}
+                                                <span style="color: var(--text-secondary); font-size: 0.9rem;">({{ complaint.department_code }})</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <strong style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Submitted</strong>
+                                        <p style="margin: 0.25rem 0 0; color: var(--text-primary); font-size: 1.1rem;">
+                                            {{ complaint.created_at|datetime if complaint.created_at else 'N/A' }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <strong style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Last Updated</strong>
+                                        <p style="margin: 0.25rem 0 0; color: var(--text-primary); font-size: 1.1rem;">
+                                            {{ complaint.updated_at|datetime if complaint.updated_at else complaint.created_at|datetime if complaint.created_at else 'N/A' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: flex-end;">
+                                <span class="tech-tag" style="background: {% if complaint.status == 'Resolved' %}#10b981{% elif complaint.status == 'In Progress' %}#3b82f6{% else %}#f59e0b{% endif %}; color: white; font-size: 1rem; padding: 0.75rem 2rem; font-weight: 600; border-radius: 50px;">
+                                    {{ complaint.status|default('Pending') }}
+                                </span>
+                                <span class="tech-tag" style="background: {% if complaint.priority == 'Urgent' %}#ef4444{% elif complaint.priority == 'High' %}#f59e0b{% else %}#6b7280{% endif %}; color: white; font-size: 0.95rem; padding: 0.5rem 1.5rem; font-weight: 500;">
+                                    {{ complaint.priority|default('Normal') }} Priority
+                                </span>
+                                {% if complaint.is_urgent %}
+                                    <span class="tech-tag" style="background: #ef4444; color: white; font-size: 0.95rem; padding: 0.5rem 1.5rem; animation: pulse 2s infinite;">
+                                        ⚠️ Urgent
+                                    </span>
+                                {% endif %}
+                                {% if complaint.sla_breached %}
+                                    <span class="tech-tag" style="background: #dc2626; color: white; font-size: 0.95rem; padding: 0.5rem 1.5rem;">
+                                        ⏰ SLA Breached
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location & Description -->
+                    <div style="margin-bottom: 2rem;">
+                        <div style="padding: 1.5rem; background: var(--bg-secondary); border-radius: 15px; margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                📍 Location
+                            </h4>
+                            <p style="color: var(--text-primary); font-size: 1.15rem; padding: 1rem; background: white; border-radius: 10px; margin: 0; font-weight: 500; border-left: 4px solid var(--primary-color);">
+                                {{ complaint.location|default('Location not provided') }}
+                            </p>
+                        </div>
+                        
+                        <div style="padding: 1.5rem; background: var(--bg-secondary); border-radius: 15px;">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                📝 Description
+                            </h4>
+                            <div style="padding: 1.5rem; background: white; border-radius: 10px; border-left: 4px solid #10b981;">
+                                <p style="color: var(--text-primary); line-height: 1.8; margin: 0; font-size: 1.05rem; white-space: pre-wrap;">{{ complaint.description|default('No description provided') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submitted Photo -->
+                    {% if complaint.photo %}
+                    <div style="padding: 1.5rem; background: var(--bg-secondary); border-radius: 15px; margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                            📷 Submitted Photo
+                        </h4>
+                        <div style="position: relative; border-radius: 15px; overflow: hidden; box-shadow: var(--shadow-lg);">
+                            <img src="{{ url_for('static', filename=complaint.photo) }}" 
+                                 alt="Complaint photo" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'18\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EImage not found%3C/text%3E%3C/svg%3E'"
+                                 style="width: 100%; display: block; max-height: 600px; object-fit: contain; background: #f5f5f5;">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Activity Timeline -->
+                    {% if complaint.activities and complaint.activities|length > 0 %}
+                    <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-secondary); border-radius: 15px;">
+                        <h4 style="margin-bottom: 1.5rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                            📊 Activity Timeline
+                        </h4>
+                        <div style="position: relative; padding-left: 2rem;">
+                            <div style="position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--primary-color) 0%, rgba(99, 102, 241, 0.3) 100%); border-radius: 2px;"></div>
+                            {% for activity in complaint.activities %}
+                            <div style="margin-bottom: 1.5rem; position: relative; padding-left: 2rem;">
+                                <div style="position: absolute; left: -0.5rem; top: 0.25rem; width: 20px; height: 20px; background: var(--primary-color); border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                                <div style="background: white; padding: 1rem 1.25rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                                        <strong style="color: var(--text-primary); font-size: 1rem;">{{ activity.action|replace('_', ' ')|title }}</strong>
+                                        <small style="color: var(--text-secondary); font-size: 0.85rem;">{{ activity.timestamp|datetime if activity.timestamp else 'N/A' }}</small>
+                                    </div>
+                                    <p style="margin: 0.25rem 0 0; color: var(--text-secondary); font-size: 0.9rem;">
+                                        By: <strong style="color: var(--text-primary);">{{ activity.user_name|default('System') }}</strong>
+                                        {% if activity.details %}
+                                            {% if activity.details.status %}
+                                                - Status: {{ activity.details.status }}
+                                            {% endif %}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Status Timeline (Basic) -->
+                    <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-secondary); border-radius: 15px;">
+                        <h4 style="margin-bottom: 1.5rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                            📈 Status Timeline
+                        </h4>
+                        <div style="position: relative; padding-left: 2rem;">
+                            <div style="position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--primary-color) 0%, rgba(99, 102, 241, 0.3) 100%); border-radius: 2px;"></div>
+                            
+                            <div style="margin-bottom: 1.5rem; position: relative; padding-left: 2rem;">
+                                <div style="position: absolute; left: -0.5rem; top: 0.25rem; width: 20px; height: 20px; background: var(--primary-color); border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                                <div style="background: white; padding: 1rem 1.25rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <strong style="color: var(--text-primary); font-size: 1rem;">Complaint Submitted</strong>
+                                    <p style="color: var(--text-secondary); margin: 0.25rem 0 0; font-size: 0.9rem;">
+                                        {{ complaint.created_at|datetime if complaint.created_at else 'N/A' }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {% if complaint.status != 'Pending' %}
+                                <div style="margin-bottom: 1.5rem; position: relative; padding-left: 2rem;">
+                                    <div style="position: absolute; left: -0.5rem; top: 0.25rem; width: 20px; height: 20px; background: #3b82f6; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                                    <div style="background: white; padding: 1rem 1.25rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                        <strong style="color: var(--text-primary); font-size: 1rem;">Status Changed to {{ complaint.status }}</strong>
+                                        <p style="color: var(--text-secondary); margin: 0.25rem 0 0; font-size: 0.9rem;">
+                                            {{ complaint.updated_at|datetime if complaint.updated_at else 'N/A' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    {% if complaint.comments and complaint.comments|length > 0 %}
+                        <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-secondary); border-radius: 15px;">
+                            <h4 style="margin-bottom: 1.5rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                💬 Admin Comments & Updates
+                            </h4>
+                            {% for comment in complaint.comments %}
+                                <div style="padding: 1.25rem; background: white; border-radius: 10px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-color);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <strong style="color: var(--text-primary); font-size: 1rem;">{{ comment.user_name|default(comment.admin_name)|default('Admin') }}</strong>
+                                            {% if comment.user_role %}
+                                                <span style="background: {% if comment.user_role == 'admin' %}var(--primary-color){% elif comment.user_role == 'staff' %}#10b981{% else %}#6b7280{% endif %}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                                                    {{ comment.user_role|upper }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <small style="color: var(--text-secondary); font-size: 0.85rem;">{{ comment.timestamp|datetime if comment.timestamp else 'N/A' }}</small>
+                                    </div>
+                                    <p style="margin: 0; color: var(--text-primary); line-height: 1.6; white-space: pre-wrap;">{{ comment.comment }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Progress/Proof Images -->
+                    {% if complaint.proof_images and complaint.proof_images|length > 0 %}
+                        <div style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-secondary); border-radius: 15px;">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                📸 Progress Photos (Worker Uploaded)
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                {% for proof in complaint.proof_images %}
+                                    <div style="background: white; padding: 1rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                        <img src="{{ url_for('static', filename=proof.path) }}" 
+                                             alt="Progress photo" 
+                                             style="width: 100%; border-radius: 10px; box-shadow: var(--shadow-md);">
+                                        <small style="color: var(--text-secondary); font-size: 0.8rem; display: block; margin-top: 0.5rem; text-align: center;">
+                                            {{ proof.uploaded_at|datetime if proof.uploaded_at else 'N/A' }}
+                                        </small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Feedback Section -->
+                    {% if complaint.status in ['Resolved', 'Closed'] and not complaint.feedback %}
+                        <div style="margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, rgba(254, 243, 199, 0.8) 0%, rgba(253, 230, 138, 0.8) 100%); border-radius: 15px; text-align: center; border: 2px solid rgba(245, 158, 11, 0.3);">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.5rem;">⭐ Share Your Experience</h4>
+                            <p style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.1rem;">Your complaint has been resolved! Please take a moment to rate your experience.</p>
+                            <a href="{{ url_for('complaint_feedback', complaint_id=complaint._id) }}" 
+                               class="cta-button" 
+                               style="display: inline-block; text-decoration: none; background: var(--gradient-primary); padding: 1rem 2rem; border-radius: 50px; color: white; font-weight: 600;">
+                                Submit Feedback & Rating
+                            </a>
+                        </div>
+                    {% elif complaint.feedback and complaint.feedback is not none %}
+                        <div style="margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, rgba(240, 253, 244, 0.8) 0%, rgba(209, 250, 229, 0.8) 100%); border-radius: 15px; border: 2px solid rgba(16, 185, 129, 0.3);">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                ⭐ Your Feedback
+                            </h4>
+                            {% if complaint.feedback.rating %}
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong style="color: var(--text-primary);">Rating: </strong>
+                                <span style="font-size: 1.5rem;">
+                                    {% set rating = complaint.feedback.rating if complaint.feedback.rating else 0 %}
+                                    {% for i in range(rating) %}⭐{% endfor %}
+                                    {% for i in range(5 - rating) %}☆{% endfor %}
+                                </span>
+                                <span style="color: var(--text-secondary);"> ({{ rating }}/5)</span>
+                            </div>
+                            {% endif %}
+                            {% if complaint.feedback.comments %}
+                                <p style="color: var(--text-primary); margin: 1rem 0 0; padding: 1rem; background: white; border-radius: 8px; line-height: 1.6;">
+                                    "{{ complaint.feedback.comments }}"
+                                </p>
+                            {% endif %}
+                            {% if complaint.feedback.submitted_at %}
+                                <small style="color: var(--text-secondary); font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                                    Submitted: {{ complaint.feedback.submitted_at|datetime }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Back Button -->
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <a href="{{ url_for('dashboard') }}" class="cta-button" style="display: inline-block; text-decoration: none; padding: 1rem 2rem; border-radius: 50px; background: var(--gradient-primary); color: white; font-weight: 600;">
+                            ← Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="portfolio-item" style="max-width: 1000px; margin: 0 auto; text-align: center; padding: 3rem;">
+                <div class="portfolio-content">
+                    <h3>Complaint Not Found</h3>
+                    <p style="color: var(--text-secondary); margin: 1rem 0 2rem;">
+                        The complaint you're looking for doesn't exist or could not be loaded.
+                    </p>
+                    <a href="{{ url_for('dashboard') }}" class="cta-button" style="display: inline-block; text-decoration: none; padding: 1rem 2rem; border-radius: 50px; background: var(--gradient-primary); color: white; font-weight: 600;">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

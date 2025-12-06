@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Complaint - Municipal Services{% endblock %}
+
+{% block content %}
+    <!-- Submit Complaint Section -->
+    <section class="contact" style="padding-top: 120px;">
+        <div class="contact-floating-shapes">
+            <div class="contact-shape contact-shape-1"></div>
+            <div class="contact-shape contact-shape-2"></div>
+            <div class="contact-shape contact-shape-3"></div>
+        </div>
+        <div class="container">
+            <div class="contact-content">
+                <h2 class="section-title fade-in">Submit a Complaint</h2>
+                <p class="fade-in">Report municipal issues and track their resolution</p>
+                
+                <form class="contact-form fade-in" method="POST" action="{{ url_for('submit_complaint') }}" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required style="padding: 1.2rem; border:rgba(255,255,255,0.7); border-radius: 15px; background: rgba(255,255,255,0.7); color:black; font-family: inherit; font-size: 1rem;">
+                                <option value="">Select a category</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location *</label>
+                            <input type="text" id="location" name="location" placeholder="Street address or landmark" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" rows="6" placeholder="Describe the issue in detail..." required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="photo">Photo (Optional)</label>
+                            <input type="file" id="photo" name="photo" accept="image/*" style="padding: 0.8rem; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px; background: rgba(255, 255, 255, 0.08); color: white;">
+                            <small style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">Upload a photo of the issue (PNG, JPG, max 16MB)</small>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" name="is_urgent" value="true" style="width: 20px; height: 20px; margin-right: 0.5rem; cursor: pointer;">
+                                <span>Mark as urgent</span>
+                            </label>
+                            <small style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">Check if this requires immediate attention</small>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit Complaint</button>
+                </form>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // DEBUG: Log that script is loaded
+    console.log('DEBUG: Submit complaint form script loaded');
+    
+    // Prevent the template JavaScript from intercepting this form
+    // Override any existing submit handlers for complaint form
+    const complaintForm = document.querySelector('.contact-form');
+    
+    // Remove any existing submit listeners by cloning the form
+    const newForm = complaintForm.cloneNode(true);
+    complaintForm.parentNode.replaceChild(newForm, complaintForm);
+    
+    // Add our own submit handler that ALLOWS form submission
+    newForm.addEventListener('submit', function(e) {
+        console.log('DEBUG: Form submit event triggered');
+        
+        const category = document.getElementById('category').value;
+        const location = document.getElementById('location').value;
+        const description = document.getElementById('description').value;
+        
+        console.log('DEBUG: Form values:', {
+            category: category,
+            location: location,
+            description: description ? description.substring(0, 50) + '...' : 'empty',
+            descriptionLength: description ? description.length : 0
+        });
+        
+        // Client-side validation (but don't prevent submission - let server handle it)
+        if (!category || !location || !description) {
+            e.preventDefault();
+            console.log('DEBUG: Validation failed - missing required fields');
+            alert('Please fill in all required fields!');
+            return false;
+        }
+        
+        if (description.length < 10) {
+            e.preventDefault();
+            console.log('DEBUG: Validation failed - description too short');
+            alert('Description must be at least 10 characters long!');
+            return false;
+        }
+        
+        // File size validation
+        const fileInput = document.getElementById('photo');
+        if (fileInput && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const maxSize = 16 * 1024 * 1024; // 16MB
+            if (file.size > maxSize) {
+                e.preventDefault();
+                console.log('DEBUG: Validation failed - file too large:', file.size);
+                alert('File size must be less than 16MB!');
+                return false;
+            }
+            console.log('DEBUG: File attached:', file.name, 'Size:', file.size);
+        }
+        
+        // Show loading state but allow form to submit
+        const submitBtn = document.querySelector('.submit-btn');
+        const originalText = submitBtn ? submitBtn.textContent : 'Submit';
+        if (submitBtn) {
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+        }
+        
+        console.log('DEBUG: Validation passed - allowing form submission to proceed');
+        // DON'T prevent default - let the form submit naturally!
+        return true;
+    });
+    
+    // Image preview
+    const photoInput = document.getElementById('photo');
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            console.log('DEBUG: Photo file selected');
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Remove existing preview if any
+                    const existingPreview = document.querySelector('.image-preview');
+                    if (existingPreview) {
+                        existingPreview.remove();
+                    }
+                    
+                    // Create preview
+                    const preview = document.createElement('img');
+                    preview.src = e.target.result;
+                    preview.className = 'image-preview';
+                    preview.style.cssText = 'max-width: 300px; border-radius: 10px; margin-top: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2);';
+                    document.getElementById('photo').parentElement.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    console.log('DEBUG: Form handlers attached successfully');
+</script>
+
+<!-- Override template JavaScript that prevents form submission -->
+<script>
+    // Remove any global form interceptors
+    (function() {
+        console.log('DEBUG: Checking for conflicting form handlers');
+        // This will run after the template JS, overriding it
+        window.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('.contact-form');
+            forms.forEach(function(form) {
+                // Remove all existing listeners by cloning
+                const action = form.getAttribute('action');
+                if (action && action.includes('submit_complaint')) {
+                    console.log('DEBUG: Found complaint form, ensuring it submits properly');
+                }
+            });
+        });
+    })();
+</script>
+{% endblock %}
+

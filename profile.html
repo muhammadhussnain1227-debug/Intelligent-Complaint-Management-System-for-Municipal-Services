@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Municipal Services{% endblock %}
+
+{% block content %}
+    <!-- Profile Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">My Profile</h2>
+            
+            <div class="portfolio-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+                <!-- Statistics Cards -->
+                <div class="portfolio-item">
+                    <div class="portfolio-content" style="text-align: center;">
+                        <h3 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;">{{ stats.total_complaints }}</h3>
+                        <h4>Total Complaints</h4>
+                    </div>
+                </div>
+                <div class="portfolio-item">
+                    <div class="portfolio-content" style="text-align: center;">
+                        <h3 style="font-size: 2.5rem; color: #10b981; margin-bottom: 0.5rem;">{{ stats.resolved }}</h3>
+                        <h4>Resolved</h4>
+                    </div>
+                </div>
+                <div class="portfolio-item">
+                    <div class="portfolio-content" style="text-align: center;">
+                        <h3 style="font-size: 2.5rem; color: #f59e0b; margin-bottom: 0.5rem;">{{ stats.pending }}</h3>
+                        <h4>Pending</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Information -->
+            <div class="portfolio-item" style="max-width: 800px; margin: 0 auto;">
+                <div class="portfolio-content">
+                    <h3 style="margin-bottom: 2rem; color: var(--text-primary);">Profile Information</h3>
+                    
+                    <form method="POST" action="{{ url_for('update_profile') }}" id="profileForm">
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+                            <div class="form-group" style="display: grid; gap: 0.75rem; text-align: left;">
+                                <label for="name" style="font-weight: 500; color: var(--text-primary);">Full Name *</label>
+                                <input type="text" id="name" name="name" value="{{ user.name }}" required
+                                       style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            </div>
+                            <div class="form-group" style="display: grid; gap: 0.75rem; text-align: left;">
+                                <label for="phone" style="font-weight: 500; color: var(--text-primary);">Phone Number *</label>
+                                <input type="tel" id="phone" name="phone" value="{{ user.phone }}" required
+                                       style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="display: grid; gap: 0.75rem; text-align: left; margin-bottom: 1.5rem;">
+                            <label for="email" style="font-weight: 500; color: var(--text-primary);">Email Address</label>
+                            <input type="email" id="email" value="{{ user.email }}" disabled
+                                   style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: #f8fafc; width: 100%; color: var(--text-secondary);">
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Email cannot be changed</small>
+                        </div>
+                        
+                        <div class="form-group" style="display: grid; gap: 0.75rem; text-align: left; margin-bottom: 1.5rem;">
+                            <label for="address" style="font-weight: 500; color: var(--text-primary);">Address</label>
+                            <input type="text" id="address" name="address" value="{{ user.profile.address if user.profile else '' }}"
+                                   placeholder="Street address"
+                                   style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                        </div>
+                        
+                        <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+                            <div class="form-group" style="display: grid; gap: 0.75rem; text-align: left;">
+                                <label for="city" style="font-weight: 500; color: var(--text-primary);">City</label>
+                                <input type="text" id="city" name="city" value="{{ user.profile.city if user.profile else '' }}"
+                                       placeholder="City name"
+                                       style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            </div>
+                            <div class="form-group" style="display: grid; gap: 0.75rem; text-align: left;">
+                                <label for="pincode" style="font-weight: 500; color: var(--text-primary);">Pincode</label>
+                                <input type="text" id="pincode" name="pincode" value="{{ user.profile.pincode if user.profile else '' }}"
+                                       placeholder="123456"
+                                       style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="submit" class="submit-btn" style="background: var(--gradient-primary); color: white; border: none; padding: 1rem 2rem; border-radius: 50px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                                Update Profile
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="submit-btn" style="background: var(--bg-secondary); color: var(--text-primary); border: 1px solid rgba(99, 102, 241, 0.2); padding: 1rem 2rem; border-radius: 50px; text-decoration: none; display: inline-block; text-align: center;">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                    
+                    <!-- Account Information -->
+                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                        <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Account Information</h4>
+                        <div style="display: grid; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px;">
+                                <span style="color: var(--text-secondary);">Account Type:</span>
+                                <span style="font-weight: 600; color: var(--text-primary); text-transform: capitalize;">{{ user.role|default('citizen') }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px;">
+                                <span style="color: var(--text-secondary);">Member Since:</span>
+                                <span style="font-weight: 600; color: var(--text-primary);">{{ user.created_at|datetime if user.created_at else 'N/A' }}</span>
+                            </div>
+                            {% if user.last_login %}
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px;">
+                                <span style="color: var(--text-secondary);">Last Login:</span>
+                                <span style="font-weight: 600; color: var(--text-primary);">{{ user.last_login|datetime if user.last_login else 'Never' }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        
+        if (!name || !phone) {
+            e.preventDefault();
+            alert('Name and phone are required!');
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.textContent = 'Updating...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}
+

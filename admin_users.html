@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin{% endblock %}
+
+{% block content %}
+    <!-- Admin Users Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">User Management</h2>
+            
+            <!-- Filters -->
+            <div class="portfolio-item" style="max-width: 100%; margin-bottom: 2rem; padding: 2rem;">
+                <form method="GET" action="{{ url_for('admin_users') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group" style="text-align: left;">
+                        <label for="search" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem; display: block;">Search</label>
+                        <input type="text" id="search" name="search" placeholder="Name or email" 
+                               value="{{ search_filter }}"
+                               style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                    </div>
+                    
+                    <div class="form-group" style="text-align: left;">
+                        <label for="role" style="color: var(--text-primary); font-weight: 500; margin-bottom: 0.5rem; display: block;">Role</label>
+                        <select id="role" name="role" style="padding: 0.8rem; border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 10px; background: white; width: 100%;">
+                            <option value="">All Roles</option>
+                            <option value="citizen" {% if role_filter == 'citizen' %}selected{% endif %}>Citizen</option>
+                            <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff</option>
+                            <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" style="padding: 1rem 2rem; background: var(--gradient-primary); color: white; border: none; border-radius: 50px; font-weight: 600; cursor: pointer; width: 100%; margin: 0;">Filter</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Users Count -->
+            <div style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: var(--bg-secondary); border-radius: 10px; display: inline-block; margin-left: auto; margin-right: auto; display: block; max-width: 400px;">
+                <h3 style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem;">{{ total }}</h3>
+                <p style="color: var(--text-secondary); margin: 0;">Total Users</p>
+            </div>
+            
+            <!-- Users List -->
+            <div class="portfolio-grid" style="grid-template-columns: 1fr; gap: 2rem;">
+                {% if users %}
+                    {% for user in users %}
+                        <div class="portfolio-item">
+                            <div class="portfolio-content">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                                    <div>
+                                        <h4 style="margin-bottom: 0.5rem;">{{ user.name }}</h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                            {{ user.email }}
+                                        </p>
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0;">
+                                            Phone: {{ user.phone|default('N/A') }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span class="tech-tag" style="background: {% if user.role == 'admin' %}#ef4444{% elif user.role == 'staff' %}#3b82f6{% else %}#10b981{% endif %}; color: white;">
+                                            {{ user.role|upper }}
+                                        </span>
+                                        {% if not user.is_active %}
+                                            <span class="tech-tag" style="background: #64748b; color: white; margin-left: 0.5rem;">
+                                                Inactive
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(99, 102, 241, 0.2);">
+                                    <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px;">
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--primary-color);">{{ user.complaints_count|default(0) }}</div>
+                                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Complaints</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px;">
+                                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Member Since</div>
+                                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-top: 0.25rem;">
+                                            {{ user.created_at|datetime('%b %d, %Y') if user.created_at else 'N/A' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if user.profile and (user.profile.city or user.profile.address) %}
+                                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                                    <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                                        {% if user.profile.address %}{{ user.profile.address }}{% endif %}
+                                        {% if user.profile.city %}, {{ user.profile.city }}{% endif %}
+                                        {% if user.profile.pincode %} - {{ user.profile.pincode }}{% endif %}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="portfolio-item" style="text-align: center; padding: 3rem;">
+                        <h4>No users found</h4>
+                        <p style="color: var(--text-secondary);">Try adjusting your filters</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <div style="text-align: center; margin-top: 3rem;">
+                <div style="display: flex; justify-content: center; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    {% if page > 1 %}
+                        <a href="{{ url_for('admin_users', page=page-1, search=search_filter, role=role_filter) }}" 
+                           class="tech-tag" 
+                           style="background: var(--primary-color); color: white; text-decoration: none; padding: 0.5rem 1rem;">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span style="color: var(--text-secondary); padding: 0 1rem;">
+                        Page {{ page }} of {{ total_pages }} ({{ total }} users)
+                    </span>
+                    
+                    {% if page < total_pages %}
+                        <a href="{{ url_for('admin_users', page=page+1, search=search_filter, role=role_filter) }}" 
+                           class="tech-tag" 
+                           style="background: var(--primary-color); color: white; text-decoration: none; padding: 0.5rem 1rem;">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Back Button -->
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="{{ url_for('admin_dashboard') }}" class="cta-button" style="display: inline-block; text-decoration: none;">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

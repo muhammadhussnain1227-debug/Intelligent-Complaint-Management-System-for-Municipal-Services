@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Municipal Complaint Management System - Home{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+            <div class="shape shape-5"></div>
+            <div class="shape shape-6"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-subtitle">Professional Complaint Management</div>
+            <h1>Report Issues, Track Solutions</h1>
+            <p class="subtitle">Submit complaints about municipal services and track their resolution in real-time. Your voice matters in improving our city.</p>
+            {% if not session.get('user_id') %}
+                <a href="{{ url_for('register') }}" class="cta-button">Get Started</a>
+                <a href="{{ url_for('login') }}" class="cta-button" style="margin-left: 1rem; background: rgba(255,255,255,0.1);">Login</a>
+            {% else %}
+                <a href="{{ url_for('submit_complaint') }}" class="cta-button">Submit Complaint</a>
+                <a href="{{ url_for('dashboard') }}" class="cta-button" style="margin-left: 1rem; background: rgba(255,255,255,0.1);">My Dashboard</a>
+            {% endif %}
+        </div>
+        <div class="scroll-indicator" onclick="document.getElementById('stats').scrollIntoView()"></div>
+    </section>
+
+    <!-- Statistics Section -->
+    {% if stats %}
+    <section id="stats" class="about" style="padding: 4rem 0;">
+        <div class="container">
+            <div class="portfolio-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="portfolio-item" style="text-align: center; padding: 2rem;">
+                    <div class="portfolio-content">
+                        <h3 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 0.5rem;">{{ stats.total_complaints|default(0) }}</h3>
+                        <h4>Total Complaints</h4>
+                    </div>
+                </div>
+                <div class="portfolio-item" style="text-align: center; padding: 2rem;">
+                    <div class="portfolio-content">
+                        <h3 style="font-size: 3rem; color: #10b981; margin-bottom: 0.5rem;">{{ stats.resolved|default(0) }}</h3>
+                        <h4>Resolved</h4>
+                    </div>
+                </div>
+                <div class="portfolio-item" style="text-align: center; padding: 2rem;">
+                    <div class="portfolio-content">
+                        <h3 style="font-size: 3rem; color: #3b82f6; margin-bottom: 0.5rem;">{{ stats.total_users|default(0) }}</h3>
+                        <h4>Active Users</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Services Section -->
+    <section id="services" class="about">
+        <div class="container">
+            <h2 class="section-title fade-in">Our Services</h2>
+            <div class="about-content">
+                <div class="about-image slide-in-left" 
+     style="display:flex; align-items:center; justify-content:center;">
+    <img src="{{ url_for('static', filename='images/basic-facilities.jpg') }}"
+         alt="Municipal services"
+         style="
+            width: 550px;
+            height: 500px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            object-fit: cover;
+         "
+         onerror="this.src='https://via.placeholder.com/550x500?text=Image+not+found';">
+</div>
+
+                <div class="about-text slide-in-right">
+                    <h3>Comprehensive Municipal Complaint Management</h3>
+                    <p>Our intelligent complaint management system helps you report municipal issues quickly and track their resolution in real-time. Whether it's garbage collection, road damage, water leakage, drainage problems, streetlight malfunctions, or any other municipal service issue, we've got you covered.</p>
+                    <p>The system automatically assigns your complaint to the correct department based on the category, ensuring faster response times and better service delivery. Our SLA (Service Level Agreement) tracking ensures timely resolution.</p>
+                    <p>Stay informed about your complaint status from submission to resolution, all in one convenient platform with real-time updates and notifications.</p>
+                    <div class="skills">
+                        <span class="skill-tag">Garbage Collection</span>
+                        <span class="skill-tag">Road Damage</span>
+                        <span class="skill-tag">Water Leakage</span>
+                        <span class="skill-tag">Drainage Issues</span>
+                        <span class="skill-tag">Streetlight Repair</span>
+                        <span class="skill-tag">SLA Tracking</span>
+                        <span class="skill-tag">Real-time Updates</span>
+                        <span class="skill-tag">Photo Evidence</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="contact-floating-shapes">
+            <div class="contact-shape contact-shape-1"></div>
+            <div class="contact-shape contact-shape-2"></div>
+            <div class="contact-shape contact-shape-3"></div>
+        </div>
+        <div class="container">
+            <div class="contact-content">
+                <h2 class="section-title fade-in">Need Help?</h2>
+                <p class="fade-in">Having trouble submitting a complaint or tracking your request? Our support team is here to help you.</p>
+                {% if not session.get('user_id') %}
+                    <a href="{{ url_for('register') }}" class="cta-button" style="margin-top: 2rem;">Create Account</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

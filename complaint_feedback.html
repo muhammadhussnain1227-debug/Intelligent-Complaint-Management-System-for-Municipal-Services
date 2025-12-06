@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Feedback - Municipal Services{% endblock %}
+
+{% block content %}
+    <!-- Feedback Section -->
+    <section class="contact" style="padding-top: 120px;">
+        <div class="contact-floating-shapes">
+            <div class="contact-shape contact-shape-1"></div>
+            <div class="contact-shape contact-shape-2"></div>
+            <div class="contact-shape contact-shape-3"></div>
+        </div>
+        <div class="container">
+            <div class="contact-content" style="max-width: 600px;">
+                <h2 class="section-title fade-in">Rate Your Experience</h2>
+                <p class="fade-in">Your feedback helps us improve our services. Please rate your experience with this complaint resolution.</p>
+                
+                <form class="contact-form fade-in" method="POST" action="{{ url_for('complaint_feedback', complaint_id=complaint_id) }}" id="feedbackForm">
+                    <input type="hidden" name="complaint_id" value="{{ complaint_id }}">
+                    
+                    <div class="form-group" style="text-align: center; margin-bottom: 2rem;">
+                        <label style="color: rgba(255,255,255,0.9); font-weight: 500; margin-bottom: 1rem; display: block; font-size: 1.1rem;">Rate Your Experience *</label>
+                        <div class="star-rating" style="display: flex; justify-content: center; gap: 0.5rem; font-size: 2.5rem; cursor: pointer;">
+                            <span class="star" data-rating="1" style="color: #64748b; transition: all 0.2s;">☆</span>
+                            <span class="star" data-rating="2" style="color: #64748b; transition: all 0.2s;">☆</span>
+                            <span class="star" data-rating="3" style="color: #64748b; transition: all 0.2s;">☆</span>
+                            <span class="star" data-rating="4" style="color: #64748b; transition: all 0.2s;">☆</span>
+                            <span class="star" data-rating="5" style="color: #64748b; transition: all 0.2s;">☆</span>
+                        </div>
+                        <input type="hidden" id="rating" name="rating" value="0" required>
+                        <p id="rating-text" style="color: rgba(255,255,255,0.8); margin-top: 0.5rem; font-size: 0.9rem;"></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feedback">Feedback/Comments (Optional)</label>
+                        <textarea id="feedback" name="feedback" rows="6" placeholder="Tell us about your experience... What went well? What could be improved?"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit Feedback</button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="{{ url_for('track_complaint', complaint_id=complaint_id) }}" style="color: rgba(255,255,255,0.8); text-decoration: underline;">Skip Feedback</a>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedRating = 0;
+    
+    // Star rating interaction
+    document.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.rating);
+            document.getElementById('rating').value = selectedRating;
+            
+            // Update stars
+            document.querySelectorAll('.star').forEach((s, index) => {
+                if (index < selectedRating) {
+                    s.textContent = '⭐';
+                    s.style.color = '#fbbf24';
+                } else {
+                    s.textContent = '☆';
+                    s.style.color = '#64748b';
+                }
+            });
+            
+            // Update rating text
+            const ratingTexts = {
+                1: 'Poor',
+                2: 'Fair',
+                3: 'Good',
+                4: 'Very Good',
+                5: 'Excellent'
+            };
+            document.getElementById('rating-text').textContent = ratingTexts[selectedRating] || '';
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.dataset.rating);
+            document.querySelectorAll('.star').forEach((s, index) => {
+                if (index < rating) {
+                    s.style.transform = 'scale(1.1)';
+                    s.style.color = '#fbbf24';
+                }
+            });
+        });
+        
+        star.addEventListener('mouseleave', function() {
+            document.querySelectorAll('.star').forEach(s => {
+                if (!selectedRating || parseInt(s.dataset.rating) > selectedRating) {
+                    s.style.transform = 'scale(1)';
+                    s.style.color = '#64748b';
+                }
+            });
+        });
+    });
+    
+    // Form validation
+    document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+        const rating = parseInt(document.getElementById('rating').value);
+        
+        if (rating < 1 || rating > 5) {
+            e.preventDefault();
+            alert('Please select a rating between 1 and 5 stars');
+            return false;
+        }
+    });
+</script>
+{% endblock %}
+

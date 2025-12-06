@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Admin{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+    <!-- Admin Analytics Section -->
+    <section class="about" style="padding-top: 120px;">
+        <div class="container">
+            <h2 class="section-title fade-in">Analytics Dashboard</h2>
+            
+            <!-- Charts Grid -->
+            <div class="portfolio-grid" style="margin-bottom: 3rem;">
+                <!-- Category Distribution Chart -->
+                <div class="portfolio-item" style="grid-column: 1 / -1;">
+                    <div class="portfolio-content">
+                        <h3 style="margin-bottom: 2rem; text-align: center;">Complaints by Category</h3>
+                        <canvas id="categoryChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Status Distribution Chart -->
+                <div class="portfolio-item">
+                    <div class="portfolio-content">
+                        <h3 style="margin-bottom: 2rem; text-align: center;">Status Distribution</h3>
+                        <canvas id="statusChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Monthly Trend Chart -->
+                <div class="portfolio-item">
+                    <div class="portfolio-content">
+                        <h3 style="margin-bottom: 2rem; text-align: center;">Monthly Trend</h3>
+                        <canvas id="monthlyChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Back Button -->
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="{{ url_for('admin_dashboard') }}" class="cta-button" style="display: inline-block;
+           text-decoration: none;
+           color: white;
+           background-color: blueviolet;
+           padding: 10px 20px;
+           border-radius: 8px;">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Category Chart
+    const categoryData = {{ analytics.category | tojson }};
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(categoryData),
+            datasets: [{
+                label: 'Number of Complaints',
+                data: Object.values(categoryData),
+                backgroundColor: [
+                    'rgba(99, 102, 241, 0.8)',
+                    'rgba(139, 92, 246, 0.8)',
+                    'rgba(236, 72, 153, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(6, 182, 212, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(99, 102, 241, 1)',
+                    'rgba(139, 92, 246, 1)',
+                    'rgba(236, 72, 153, 1)',
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(6, 182, 212, 1)'
+                ],
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Status Chart
+    const statusData = {{ analytics.status | tojson }};
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(statusData),
+            datasets: [{
+                data: Object.values(statusData),
+                backgroundColor: [
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(16, 185, 129, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Monthly Trend Chart
+    const monthlyData = {{ analytics.monthly | tojson }};
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: Object.keys(monthlyData).reverse(),
+            datasets: [{
+                label: 'Complaints',
+                data: Object.values(monthlyData).reverse(),
+                borderColor: 'rgba(99, 102, 241, 1)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+
